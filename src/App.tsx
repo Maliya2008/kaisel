@@ -13,22 +13,18 @@ import {
   Award, 
   CheckCircle2, 
   Trophy, 
-  ArrowRight, 
   Download, 
-  Eye, 
   FileText, 
   Lock, 
   Sparkles, 
-  Plus, 
-  Minus, 
-  Smartphone as PhoneIcon, 
   X, 
   HelpCircle,
   TrendingUp,
   Dumbbell,
   BookOpen,
   Compass,
-  AlertTriangle
+  AlertTriangle,
+  ChevronRight
 } from "lucide-react";
 
 // Types for the Interactive Quest Interface
@@ -50,8 +46,8 @@ interface QuestItem {
 }
 
 export default function App() {
-  // Personalized state using user prefix if available, otherwise "Hunter"
-  const userPlaceholder = "Malindu"; // Optimized for user's email: malinduchethiyaatwork@gmail.com
+  // Personalized state using user prefix
+  const userPlaceholder = "Malindu"; 
   const [hunterName, setHunterName] = useState(userPlaceholder);
   const [isEditingName, setIsEditingName] = useState(false);
   const [selectedClass, setSelectedClass] = useState("Shadow Monarch");
@@ -65,16 +61,16 @@ export default function App() {
   const [fatigue, setFatigue] = useState(15);
   
   const [stats, setStats] = useState<Stat[]>([
-    { name: "Strength", abbreviation: "STR", value: 12, description: "Increases physical power and stamina" },
-    { name: "Vitality", abbreviation: "VIT", value: 11, description: "Boosts max health and recovery rates" },
-    { name: "Agility", abbreviation: "AGI", value: 14, description: "Improves workout speeds and reflexes" },
-    { name: "Intelligence", abbreviation: "INT", value: 10, description: "Enhances study focus and problem-solving" },
-    { name: "Senses", abbreviation: "SEN", value: 10, description: "Sharpens spatial awareness and sleep quality" },
+    { name: "Strength", abbreviation: "STR", value: 48, description: "Increases physical power load and overall stamina" },
+    { name: "Vitality", abbreviation: "VIT", value: 24, description: "Boosts max health pools and natural recovery rates" },
+    { name: "Agility", abbreviation: "AGI", value: 32, description: "Improves workout speeds and motor reflexes" },
+    { name: "Intelligence", abbreviation: "INT", value: 14, description: "Enhances study focus and logic problem-solving" },
+    { name: "Senses", abbreviation: "SEN", value: 18, description: "Sharpens situational awareness and sleep metrics" },
   ]);
 
   const [quests, setQuests] = useState<QuestItem[]>([
-    { id: "q1", name: "Daily Workout routine", type: "workout", current: 80, target: 100, unit: "reps", rewardStr: "+1 STR, +10 XP" },
-    { id: "q2", name: "Read & Learn Coding", type: "study", current: 25, target: 30, unit: "mins", rewardStr: "+1 INT, +10 XP" },
+    { id: "q1", name: "100 Pushups routine", type: "workout", current: 80, target: 100, unit: "reps", rewardStr: "+1 STR, +10 XP" },
+    { id: "q2", name: "Read & Learn Coding", type: "study", current: 25, target: 30, unit: "mins", rewardStr: "+1 INT, +15 XP" },
     { id: "q3", name: "Mindful Meditation", type: "mind", current: 5, target: 10, unit: "mins", rewardStr: "+1 SEN, +5 XP" },
   ]);
 
@@ -84,6 +80,29 @@ export default function App() {
 
   // Privacy Policy Modal State
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+
+  // Simple custom SPA route tracking to support standard /privacy url structure
+  const [currentRoute, setCurrentRoute] = useState<"main" | "privacy">(() => {
+    if (typeof window !== "undefined") {
+      return window.location.pathname === "/privacy" ? "privacy" : "main";
+    }
+    return "main";
+  });
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentRoute(window.location.pathname === "/privacy" ? "privacy" : "main");
+    };
+    window.addEventListener("popstate", handleLocationChange);
+    return () => window.removeEventListener("popstate", handleLocationChange);
+  }, []);
+
+  const navigateTo = (route: "main" | "privacy") => {
+    const path = route === "privacy" ? "/privacy" : "/";
+    window.history.pushState({}, "", path);
+    setCurrentRoute(route);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Auto-dismiss notifications
   useEffect(() => {
@@ -101,11 +120,12 @@ export default function App() {
             setNotification(`Quest "${q.name}" is already fully finished!`);
             return q;
           }
-          const nextVal = Math.min(q.target, q.current + (q.type === "workout" ? 10 : 5));
+          const increment = q.type === "workout" ? 10 : 5;
+          const nextVal = Math.min(q.target, q.current + increment);
           const completedNow = nextVal === q.target;
           
           if (completedNow) {
-            setNotification(`🏆 Quest Completed: ${q.name}! Recieved gold & extra leveling XP!`);
+            setNotification(`🏆 Quest Completed: ${q.name}! Recieved bonus gold & extra leveling XP!`);
             setXp(prevXp => {
               const newXp = prevXp + 25;
               if (newXp >= maxXp) {
@@ -114,7 +134,7 @@ export default function App() {
                   setLevel(l => l + 1);
                   setXp(newXp - maxXp);
                   setStatPoints(p => p + 5);
-                  setGold(g => g + 100);
+                  setGold(g => g + 120);
                   setFatigue(f => Math.max(0, f - 10));
                   setLevelUpTriggered(true);
                   setNotification("🌟 SYSTEM ALERT: CONGRATULATIONS! YOU HAVE LEVELED UP!");
@@ -126,14 +146,14 @@ export default function App() {
             // Add automatic stats awards based on quest type
             setStats(prevStats => 
               prevStats.map(s => {
-                if (q.type === "workout" && s.abbreviation === "STR") return { ...s, value: s.value + 1 };
-                if (q.type === "study" && s.abbreviation === "INT") return { ...s, value: s.value + 1 };
+                if (q.type === "workout" && s.abbreviation === "STR") return { ...s, value: s.value + 2 };
+                if (q.type === "study" && s.abbreviation === "INT") return { ...s, value: s.value + 2 };
                 if (q.type === "mind" && s.abbreviation === "SEN") return { ...s, value: s.value + 1 };
                 return s;
               })
             );
 
-            setGold(g => g + 35);
+            setGold(g => g + 50);
           }
           return { ...q, current: nextVal };
         }
@@ -149,23 +169,23 @@ export default function App() {
     setGold(150);
     setFatigue(15);
     setStats([
-      { name: "Strength", abbreviation: "STR", value: 12, description: "Increases physical power and stamina" },
-      { name: "Vitality", abbreviation: "VIT", value: 11, description: "Boosts max health and recovery rates" },
-      { name: "Agility", abbreviation: "AGI", value: 14, description: "Improves workout speeds and reflexes" },
-      { name: "Intelligence", abbreviation: "INT", value: 10, description: "Enhances study focus and problem-solving" },
-      { name: "Senses", abbreviation: "SEN", value: 10, description: "Sharpens spatial awareness and sleep quality" },
+      { name: "Strength", abbreviation: "STR", value: 48, description: "Increases physical power load and overall stamina" },
+      { name: "Vitality", abbreviation: "VIT", value: 24, description: "Boosts max health pools and natural recovery rates" },
+      { name: "Agility", abbreviation: "AGI", value: 32, description: "Improves workout speeds and motor reflexes" },
+      { name: "Intelligence", abbreviation: "INT", value: 14, description: "Enhances study focus and logic problem-solving" },
+      { name: "Senses", abbreviation: "SEN", value: 18, description: "Sharpens situational awareness and sleep metrics" },
     ]);
     setQuests([
-      { id: "q1", name: "Daily Workout routine", type: "workout", current: 80, target: 100, unit: "reps", rewardStr: "+1 STR, +10 XP" },
-      { id: "q2", name: "Read & Learn Coding", type: "study", current: 25, target: 30, unit: "mins", rewardStr: "+1 INT, +10 XP" },
+      { id: "q1", name: "100 Pushups routine", type: "workout", current: 80, target: 100, unit: "reps", rewardStr: "+1 STR, +10 XP" },
+      { id: "q2", name: "Read & Learn Coding", type: "study", current: 25, target: 30, unit: "mins", rewardStr: "+1 INT, +15 XP" },
       { id: "q3", name: "Mindful Meditation", type: "mind", current: 5, target: 10, unit: "mins", rewardStr: "+1 SEN, +5 XP" },
     ]);
-    setNotification("System simulator has been reset.");
+    setNotification("System simulator metrics reset to defaults.");
   };
 
   const allocateStatPoint = (abbreviation: string) => {
     if (statPoints <= 0) {
-      setNotification("No remaining stat points. Level up to obtain more!");
+      setNotification("No remaining stat points. Conquer quests to level up and obtain more!");
       return;
     }
     setStats(prev => 
@@ -177,7 +197,7 @@ export default function App() {
       })
     );
     setStatPoints(p => p - 1);
-    setNotification(`Allocated 1 Point into ${abbreviation}!`);
+    setNotification(`Allocated 1 Attribute Point into ${abbreviation}!`);
   };
 
   // Determine Rank based on interactive Level
@@ -190,10 +210,87 @@ export default function App() {
     return "E-Rank";
   };
 
+  if (currentRoute === "privacy") {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-6 sm:p-12 relative overflow-hidden flex flex-col justify-between selection:bg-blue-600 selection:text-white" id="privacy-page-container">
+        <div className="absolute top-0 left-0 right-0 h-[100px] bg-gradient-to-b from-blue-600/10 to-transparent blur-3xl pointer-events-none" />
+        
+        <div className="max-w-4xl mx-auto w-full space-y-10 py-12">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-8">
+            <div className="space-y-2">
+              <button 
+                onClick={() => navigateTo("main")} 
+                className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-mono text-zinc-500 hover:text-blue-500 transition-colors cursor-pointer mb-2 bg-transparent border-0 p-0"
+              >
+                ← Return to main terminal
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-black italic text-white shadow-lg shadow-blue-600/20">K</div>
+                <h1 className="font-display font-black text-3xl sm:text-4xl text-zinc-100 uppercase tracking-tighter">
+                  Kaisel Sovereign Privacy Policy
+                </h1>
+              </div>
+              <p className="text-xs text-zinc-500 font-mono">Status: Verified Offline Protocol • Last Updated: June 23, 2026</p>
+            </div>
+          </div>
+
+          {/* Privacy Content Blocks */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-10 space-y-8 text-sm text-zinc-300 leading-relaxed font-mono shadow-2xl relative">
+            <div className="absolute inset-0 bg-blue-600/[0.01] pointer-events-none rounded-3xl" />
+            
+            <div className="space-y-3">
+              <span className="block font-display font-black text-lg text-zinc-100 uppercase tracking-tight text-blue-500">1. Decentralized Local Sandboxing</span>
+              <p>
+                Kaisel is engineered entirely as an offline-first system tool. The application stores all your personalized attributes values (STR, Vitality, Agility), XP counters, level benchmarks, local workout goals, study durations, and completed milestones locally on your device storage inside sandboxed binary layouts. No personal profiles are ever requested, stored or transmitted onto corporate server infrastructure.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <span className="block font-display font-black text-lg text-zinc-100 uppercase tracking-tight text-blue-500">2. Telemetry and Local Integrations</span>
+              <p>
+                For automatic verification index syncs, you can optionally connect local Android step telemetry sensors. The metrics derived from physical workouts are inspected purely on-device and instantly converted to attribute stats increments. We strictly maintain a policy of zero central logging, zero location metrics caching, and zero device identity verification uploads. 
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <span className="block font-display font-black text-lg text-zinc-100 uppercase tracking-tight text-blue-500">3. Absolute Zero Adware/Trackers</span>
+              <p>
+                The Kaisel application is fundamentally open source inspired and contains zero telemetry tracker platforms, zero analytical pixel codes (such as Google Analytics or meta tracking structures), and zero marketing ad services. Our development relies solely on clean, transparent logic configurations.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <span className="block font-display font-black text-lg text-zinc-100 uppercase tracking-tight text-blue-500">4. Controller & Contact Reference</span>
+              <p>
+                If you require assistance regarding the standalone installer source modules or wish to request revisions to the gamified physical ratios configurations, you can contact the system architect over physical coordinate address or directly contact via mail: <a href="mailto:malinduchethiyaatwork@gmail.com" className="text-blue-400 underline lowercase">malinduchethiyaatwork@gmail.com</a>.
+              </p>
+            </div>
+          </div>
+
+          {/* Accept / Done button */}
+          <div className="text-center pt-4">
+            <button 
+              onClick={() => navigateTo("main")}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-display font-bold py-3 px-10 rounded-xl text-xs uppercase tracking-wider transition-all transform hover:-translate-y-0.5 cursor-pointer shadow-lg shadow-blue-500/10"
+            >
+              Acknowledge & Return to Terminal
+            </button>
+          </div>
+        </div>
+
+        {/* Small Footer */}
+        <footer className="border-t border-zinc-900 py-8 text-center text-[10px] text-zinc-650 uppercase tracking-[0.2em] font-mono mt-12 w-full">
+          © {new Date().getFullYear()} Kaisel Sovereign System Integration • Built with Bento aesthetics of the Monarchs.
+        </footer>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans leading-relaxed selection:bg-sky-500 selection:text-white" id="main-container">
+    <div className="bg-zinc-950 text-zinc-100 font-sans selection:bg-blue-600 selection:text-white" id="main-container">
       
-      {/* Animated Level-Up Celebration Overlay */}
+      {/* Level-Up Celebration Overlay */}
       <AnimatePresence>
         {levelUpTriggered && (
           <motion.div 
@@ -205,47 +302,47 @@ export default function App() {
             id="levelup-overlay"
           >
             <motion.div
-              initial={{ scale: 0.3, y: 100 }}
+              initial={{ scale: 0.9, y: 50 }}
               animate={{ type: "spring", scale: 1, y: 0 }}
-              className="relative p-8 rounded-2xl border-2 border-sky-400 bg-slate-900 shadow-2xl max-w-md w-full"
+              className="relative p-8 rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl max-w-md w-full"
             >
-              {/* Background ambient beam */}
-              <div className="absolute inset-0 bg-sky-500/20 rounded-2xl blur-xl" />
+              {/* Blue accent glow */}
+              <div className="absolute inset-0 bg-blue-600/10 rounded-2xl blur-2xl" />
               
-              <div className="relative z-10">
+              <div className="relative z-10 space-y-4">
                 <motion.div 
-                  animate={{ rotate: [0, 10, -10, 10, 0] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                  className="mx-auto w-20 h-20 rounded-full bg-sky-950 flex items-center justify-center border border-sky-400 mb-4"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="mx-auto w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center border border-blue-400 mb-2"
                 >
-                  <Trophy className="w-10 h-10 text-sky-400" />
+                  <Trophy className="w-8 h-8 text-white" />
                 </motion.div>
 
-                <h2 className="font-display font-bold text-4xl text-sky-400 tracking-wider mb-2 uppercase neon-glow-blue">
-                  LEVEL UP!
+                <h2 className="font-display font-black text-4xl text-blue-500 tracking-tighter uppercase">
+                  LEVEL UP
                 </h2>
                 
-                <p className="text-xl text-white font-medium mb-4">
-                  The System acknowledges your growth.
+                <p className="text-zinc-400 text-sm">
+                  The Sovereign system acknowledges your daily training progress.
                 </p>
 
-                <div className="bg-slate-950/80 rounded-xl p-4 border border-slate-800 text-left mb-6 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Current Level</span>
-                    <span className="font-mono font-bold text-sky-400 text-base">Lv. {level} <span className="text-xs text-slate-500">({getRank(level)})</span></span>
+                <div className="bg-zinc-950 rounded-xl p-4 border border-zinc-800 text-left space-y-2.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">CURRENT CLASSIFICATION</span>
+                    <span className="font-mono font-bold text-blue-400">Lv. {level} ({getRank(level)})</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Available Stat Points</span>
-                    <span className="font-mono font-bold text-amber-400">+5 (Total: {statPoints})</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">SPENDABLE STAT POINTS</span>
+                    <span className="font-mono font-bold text-emerald-400">+{5} (Total Remaining: {statPoints})</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">System Gold</span>
-                    <span className="font-mono font-bold text-yellow-400">+{100} Coins</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">QUEST REWARDS</span>
+                    <span className="font-mono font-bold text-yellow-400">+120 Gold / +2 Stats</span>
                   </div>
                 </div>
 
                 <button 
-                  className="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-display font-medium py-3 rounded-lg transition-all tracking-wide shadow-lg cursor-pointer"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-display font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-sm cursor-pointer"
                   onClick={() => setLevelUpTriggered(false)}
                 >
                   CONFIRM AWAKENING
@@ -257,39 +354,32 @@ export default function App() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-900" id="main-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-sky-500 flex items-center justify-center shadow-lg border border-sky-400 shadow-sky-500/10">
-              <Flame className="w-6 h-6 text-slate-950 fill-slate-950" />
-            </div>
-            <div>
-              <span className="font-display font-bold text-2xl tracking-wider text-white">KAISEL</span>
-              <span className="hidden sm:inline-block ml-2 px-2 py-0.5 rounded bg-sky-950 text-sky-400 font-mono text-[10px] uppercase font-bold tracking-widest border border-sky-900/50">SYSTEM ENGAGED</span>
-            </div>
-          </div>
-          
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-            <a href="#how-it-works" className="hover:text-sky-400 transition-colors">System Mechanics</a>
-            <a href="#interactive-simulator" className="hover:text-sky-400 transition-colors">Quest Terminal</a>
-            <a href="#app-features" className="hover:text-sky-400 transition-colors">Awakened Perks</a>
-            <a href="#downloads" className="hover:text-sky-400 transition-colors">Android Download</a>
-          </nav>
+      <header className="h-16 flex items-center justify-between px-6 sm:px-8 border-b border-zinc-850 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-45" id="main-header">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-black italic text-white shadow-lg shadow-blue-600/20">K</div>
+          <span className="font-display font-black text-xl tracking-tighter uppercase text-zinc-100">Kaisel</span>
+        </div>
+        
+        <nav className="hidden md:flex gap-8 text-xs uppercase tracking-widest font-black text-zinc-500">
+          <a href="#how-it-works" className="hover:text-blue-500 transition-colors">System Mechanics</a>
+          <a href="#interactive-simulator" className="text-blue-400 hover:text-blue-500 transition-colors">Interactive HUD</a>
+          <a href="#app-features" className="hover:text-blue-500 transition-colors">Dungeon Perks</a>
+          <a href="#downloads" className="hover:text-blue-500 transition-colors">Download</a>
+        </nav>
 
-          <div>
-            <a 
-              href="#downloads" 
-              className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-850 text-sky-400 border border-sky-400/35 hover:border-sky-400 px-4 py-2 rounded-lg text-sm font-display font-medium transition-all"
-            >
-              <Smartphone className="w-4 h-4" />
-              <span>Get App</span>
-            </a>
-          </div>
+        <div>
+          <a 
+            href="#downloads" 
+            className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-100 px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-bold transition-all inline-flex items-center gap-1.5"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-blue-500" />
+            <span>Install APK</span>
+          </a>
         </div>
       </header>
 
       {/* Main Content */}
-      <main>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         
         {/* Toast Notification */}
         <AnimatePresence>
@@ -298,596 +388,565 @@ export default function App() {
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-slate-900 border-l-4 border-sky-400 p-4 rounded-r-lg shadow-xl max-w-md w-[calc(100%-2rem)] flex items-start gap-3"
+              className="fixed top-20 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 border border-zinc-800 p-4 rounded-xl shadow-2xl max-w-md w-[calc(100%-2rem)] flex items-start gap-3"
               id="system-notification"
             >
-              <div className="p-1 rounded bg-sky-950 text-sky-400">
-                <Sparkles className="w-4 h-4 text-sky-400" />
+              <div className="p-1.5 rounded bg-blue-600/20 text-blue-400">
+                <Sparkles className="w-4 h-4 text-blue-500" />
               </div>
               <div className="flex-1">
-                <span className="block text-xs font-mono font-semibold tracking-widest uppercase text-sky-400">System Broadcast</span>
-                <span className="text-slate-200 text-sm">{notification}</span>
+                <span className="block text-[10px] font-mono font-bold tracking-widest uppercase text-zinc-500">System Broadcast</span>
+                <span className="text-zinc-200 text-sm font-medium">{notification}</span>
               </div>
-              <button onClick={() => setNotification(null)} className="text-slate-500 hover:text-slate-300">
+              <button onClick={() => setNotification(null)} className="text-zinc-500 hover:text-zinc-350">
                 <X className="w-4 h-4" />
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Hero Banner Section */}
-        <section className="relative overflow-hidden pt-12 pb-24 md:py-32" id="hero-section">
-          {/* Neon glowing ambient circles */}
-          <div className="absolute top-1/4 left-1/10 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl -z-10" />
-          <div className="absolute bottom-1/4 right-1/10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10" />
+        {/* Bento Grid Header / Hero Module */}
+        <div className="grid grid-cols-12 gap-4" id="hero-section">
           
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-              
-              {/* Hero Copy (5 Ranks / Columns) */}
-              <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-sky-950/60 border border-sky-500/30 rounded-full text-xs font-mono text-sky-400">
-                  <span className="animate-pulse inline-block w-2 bg-sky-400 h-2 rounded-full" />
-                  <span>THE SYSTEM HAS AWAKENED FOR ANDROID</span>
+          {/* Main Giant Hero Card (8 Cols / Rows) */}
+          <div className="col-span-12 lg:col-span-8 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row justify-between relative overflow-hidden group min-h-[360px]">
+            {/* Ambient dynamic glow in the background */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="z-10 flex flex-col justify-between max-w-xl space-y-6">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-950 border border-zinc-800 rounded-lg text-xs font-mono text-blue-400 uppercase tracking-wider mb-4">
+                  <span className="animate-pulse inline-block w-2 bg-blue-500 h-2 rounded-full" />
+                  <span>The System has Awakening Rules</span>
                 </div>
                 
-                <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-[1.1]">
-                  Break Your Limits.<br />
-                  <span className="bg-gradient-to-r from-sky-400 via-indigo-400 to-sky-300 bg-clip-text text-transparent uppercase neon-glow-blue">Gain The System.</span>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] uppercase">
+                  AWAKEN YOUR <span className="text-blue-500">LIMITS.</span>
                 </h1>
-
-                <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto lg:mx-0">
-                  Kaisel is an offline-first, deeply gamified Android app inspired by legendary leveling manga. It turns your daily exercise routines, studying goals, coding progress, and physical tasks into a fully interactive RPG experience. Accept quests, upgrade stats real-time, and watch your Rank rise.
-                </p>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <a 
-                    href="#downloads" 
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-sky-500 hover:bg-sky-400 text-slate-950 px-8 py-4 rounded-xl font-display font-semibold transition-all hover:translate-y-[-2px] shadow-lg shadow-sky-500/20 tracking-wide"
-                  >
-                    <Download className="w-5 h-5 fill-slate-950" />
-                    <span>Download App (Free APK)</span>
-                  </a>
-                  
-                  <a 
-                    href="#interactive-simulator" 
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-850 text-slate-300 border border-slate-800 px-8 py-4 rounded-xl font-display font-medium transition-all hover:translate-y-[-2px]"
-                  >
-                    <Zap className="w-5 h-5 text-sky-400" />
-                    <span>Test-Drive System Demo</span>
-                  </a>
-                </div>
-
-                <div className="pt-6 grid grid-cols-3 gap-4 max-w-md mx-auto lg:mx-0 border-t border-slate-900">
-                  <div className="text-center lg:text-left">
-                    <span className="block font-display font-bold text-2xl text-white">100%</span>
-                    <span className="text-xs text-slate-500 font-mono uppercase">Offline & Secure</span>
-                  </div>
-                  <div className="text-center lg:text-left">
-                    <span className="block font-display font-bold text-2xl text-white">Zero</span>
-                    <span className="text-xs text-slate-500 font-mono uppercase">Intrusive Trackers</span>
-                  </div>
-                  <div className="text-center lg:text-left">
-                    <span className="block font-display font-bold text-2xl text-white">E to S</span>
-                    <span className="text-xs text-slate-500 font-mono uppercase">Growth Hierarchy</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Hero Graphic Column (5 Columns) */}
-              <div className="lg:col-span-5 flex justify-center">
-                <div className="relative w-full max-w-sm sm:max-w-md">
-                  {/* Outer border decoration mimicking a high-tech phone */}
-                  <div className="absolute inset-x-0 -top-6 -bottom-6 bg-gradient-to-b from-sky-500/10 via-indigo-500/5 to-slate-950/20 rounded-3xl blur-md -z-10" />
-                  
-                  <div className="border border-slate-800 bg-slate-900/70 p-3 rounded-2xl shadow-xl backdrop-blur-md">
-                    <div className="relative rounded-xl overflow-hidden aspect-[16/9] sm:aspect-auto border border-slate-855">
-                      <img 
-                        src="src/assets/images/kaisel_hero_1782224616667.jpg" 
-                        alt="Kaisel interface holographic preview" 
-                        className="w-full h-auto object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                      {/* Gradient overlay inside image to blend */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-                      
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <div className="bg-slate-950/90 border border-sky-900/40 p-3 rounded-lg backdrop-blur-sm">
-                          <p className="font-mono text-[10px] text-sky-400 font-semibold tracking-wider uppercase mb-1">Manga System UI Preview</p>
-                          <p className="text-xs text-slate-350">
-                            "System initialized. The path to the Sovereign is open. Ready for daily assessment, Malindu."
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works Section */}
-        <section className="py-20 border-t border-slate-900 bg-slate-950/30" id="how-it-works">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-              <span className="font-mono text-xs text-sky-400 font-bold tracking-widest uppercase">The Process of Awakening</span>
-              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white">How The Kaisel System Works</h2>
-              <p className="text-slate-400">
-                You do not buy levels. You forge them with real sweat, research, study, and daily focus. The app translates your actual tasks into high-stakes dungeon battles and rewards.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              
-              {/* Card 1 */}
-              <div className="bg-slate-900/40 border border-slate-900 p-6 rounded-2xl space-y-4 hover:border-slate-800 transition-all group">
-                <div className="w-12 h-12 rounded-xl bg-sky-950 text-sky-400 flex items-center justify-center border border-sky-900/50 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300">
-                  <Smartphone className="w-6 h-6" />
-                </div>
-                <h3 className="font-display font-semibold text-lg text-white">1. Engage the App Interface</h3>
-                <p className="text-sm text-slate-400">
-                  Download and launch the offline-first environment. Set up your starting hunter stats. Zero internet connection or API integration needed.
-                </p>
-              </div>
-
-              {/* Card 2 */}
-              <div className="bg-slate-900/40 border border-slate-900 p-6 rounded-2xl space-y-4 hover:border-slate-800 transition-all group">
-                <div className="w-12 h-12 rounded-xl bg-sky-950 text-sky-400 flex items-center justify-center border border-sky-900/50 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300">
-                  <Activity className="w-6 h-6" />
-                </div>
-                <h3 className="font-display font-semibold text-lg text-white">2. Push your Limits</h3>
-                <p className="text-sm text-slate-400">
-                  Perform actual workouts, finish homework, or program applications. Input your completions inside the Kaisel log daily.
-                </p>
-              </div>
-
-              {/* Card 3 */}
-              <div className="bg-slate-900/40 border border-slate-900 p-6 rounded-2xl space-y-4 hover:border-slate-800 transition-all group">
-                <div className="w-12 h-12 rounded-xl bg-sky-950 text-sky-400 flex items-center justify-center border border-sky-900/50 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300">
-                  <Swords className="w-6 h-6" />
-                </div>
-                <h3 className="font-display font-semibold text-lg text-white">3. Conquer the Raid</h3>
-                <p className="text-sm text-slate-400">
-                  Assign difficulty tiers (E-Rank to S-Rank) to your tasks. Solving complex work feels like defeating massive, ominous dungeon lords.
-                </p>
-              </div>
-
-              {/* Card 4 */}
-              <div className="bg-slate-900/40 border border-slate-900 p-6 rounded-2xl space-y-4 hover:border-slate-800 transition-all group">
-                <div className="w-12 h-12 rounded-xl bg-sky-950 text-sky-400 flex items-center justify-center border border-sky-900/50 group-hover:bg-sky-500 group-hover:text-slate-950 transition-all duration-300">
-                  <Award className="w-6 h-6" />
-                </div>
-                <h3 className="font-display font-semibold text-lg text-white">4. Allocate & Level Up</h3>
-                <p className="text-sm text-slate-400">
-                  Acquire free system stat points during Level Up. Manually input your stats point increase to customize your optimal character build.
-                </p>
-              </div>
-
-            </div>
-          </div>
-        </section>
-
-        {/* Live Interactive Simulator HUD Section */}
-        <section className="py-20 bg-slate-900/20 border-t border-slate-900 scroll-mt-20" id="interactive-simulator">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-              <span className="font-mono text-xs text-sky-400 font-bold tracking-widest uppercase mb-1 block">Live Browser Simulation</span>
-              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white">Test-Drive the Kaisel Interface</h2>
-              <p className="text-slate-400 text-sm sm:text-base">
-                Interact with the mock terminal below. Complete standard quests to gather XP, trigger a real <strong className="text-sky-400">LEVEL UP</strong> notification, and spend attributes onto your personal Hunter.
-              </p>
-            </div>
-
-            {/* Simulated Game Console Block */}
-            <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden max-w-4xl mx-auto">
-              
-              {/* Header Tab Panel */}
-              <div className="bg-slate-900/80 px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3.5 h-3.5 rounded-full bg-red-500/80" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-amber-500/80" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-sky-500/80" />
-                  <span className="ml-2 font-mono text-xs text-slate-500 tracking-wider">KAISEL_CORE v1.0.4-LOCAL-HUD</span>
-                </div>
-                <button 
-                  onClick={resetInteractiveDemo}
-                  className="px-3 py-1 bg-slate-950 text-slate-400 hover:text-white border border-slate-800 rounded text-xs font-mono transition-colors cursor-pointer"
-                >
-                  Reset HUD
-                </button>
-              </div>
-
-              {/* Game Layout Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-12">
                 
-                {/* Left Panel: Hunter Persona & Core Stats (5 Columns) */}
-                <div className="md:col-span-5 p-6 border-b md:border-b-0 md:border-r border-slate-800 space-y-6 bg-slate-950">
-                  
-                  {/* Avatar & Class Selection */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs text-slate-500">AWAKENED LOG</span>
-                      <span className="font-mono text-xs px-2 py-0.5 bg-sky-950 text-sky-400 rounded-full border border-sky-900/30 font-bold uppercase tracking-wider">
-                        {getRank(level)} RANK
-                      </span>
-                    </div>
+                <p className="text-zinc-400 text-sm sm:text-base mt-4 leading-relaxed">
+                  Kaisel turns your daily workout, coding logs, and tasks into a legendary levelling system inspired by legendary web novels. Upgrade attributes real-time, conquer critical fitness goals offline, and view your ranking climb. 
+                </p>
+              </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center border border-sky-400 shadow-lg shadow-sky-500/20">
-                        <Flame className="w-8 h-8 text-white fill-white/10" />
+              <div className="flex flex-wrap gap-4 pt-2">
+                <a 
+                  href="#downloads" 
+                  className="bg-white hover:bg-zinc-250 text-black px-6 py-3 rounded-xl font-bold flex items-center gap-2 transform hover:-translate-y-0.5 transition-all text-sm uppercase"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download APK</span>
+                </a>
+                <a 
+                  href="#interactive-simulator" 
+                  className="border border-zinc-700 hover:border-zinc-500 bg-zinc-950/40 text-zinc-300 px-6 py-3 rounded-xl font-bold text-sm uppercase transition-all"
+                >
+                  View Simulator
+                </a>
+              </div>
+            </div>
+
+            {/* Float holographic preview */}
+            <div className="relative mt-8 md:mt-0 md:w-56 flex items-center justify-center">
+              <div className="border border-zinc-800 rounded-xl p-4 bg-zinc-950/90 shadow-xl max-w-xs w-full rotate-[-3deg] hover:rotate-0 transition-transform duration-300">
+                <div className="text-[10px] text-blue-400 font-mono mb-2 uppercase tracking-wide flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping" />
+                  <span>[System Message]</span>
+                </div>
+                <div className="text-xs italic text-zinc-300 mb-4 font-mono">
+                  "Ready for assessment, hunter Malindu. 2/3 logs finished."
+                </div>
+                
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+                    <span>HUNTER LEVEL UP</span>
+                    <span>65.4%</span>
+                  </div>
+                  <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 w-[65%] shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Quick Stats Card (4 cols / Rows) */}
+          <div className="col-span-12 lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between" id="how-it-works">
+            <div>
+              <div className="text-xs text-zinc-500 uppercase font-bold tracking-widest mb-3">Player Status Build</div>
+              <h3 className="font-display font-bold text-xl text-zinc-100 uppercase mb-4">Initial Class Specs</h3>
+              
+              <div className="space-y-2.5">
+                <div className="flex justify-between items-center text-sm border-b border-zinc-850 pb-1.5">
+                  <span className="text-zinc-400 font-medium font-mono text-xs">STR PHYSICAL POWER</span>
+                  <span className="text-blue-400 font-mono font-bold">48</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-b border-zinc-850 pb-1.5">
+                  <span className="text-zinc-400 font-medium font-mono text-xs">AGI SPEED & WORK</span>
+                  <span className="text-blue-400 font-mono font-bold">32</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-b border-zinc-850 pb-1.5">
+                  <span className="text-zinc-400 font-medium font-mono text-xs">INT CODE MIND</span>
+                  <span className="text-blue-400 font-mono font-bold">14</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-zinc-800 flex justify-between items-center bg-zinc-950/50 p-3 rounded-xl border border-zinc-900">
+              <span className="text-[10px] uppercase font-bold text-zinc-500">Equipped Class Status</span>
+              <span className="text-xs uppercase font-black text-white px-2 py-1 bg-zinc-900 border border-zinc-850 rounded">
+                SHADOW MONARCH
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Detailed Mechanics - Dynamic Bento Widgets */}
+        <div className="grid grid-cols-12 gap-4">
+          
+          {/* Bento Upwards Callout Card (4 Cols) */}
+          <div className="col-span-12 md:col-span-4 bg-blue-600 rounded-2xl p-6 text-white flex flex-col justify-between relative overflow-hidden group min-h-[220px]">
+            <div className="absolute right-0 bottom-0 opacity-15 transform translate-x-4 translate-y-4 font-black italic text-8xl pointer-events-none">RPG</div>
+            
+            <div className="space-y-2">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-blue-200 bg-blue-700/60 px-2 py-0.5 rounded-md inline-block">System Logic</span>
+              <h3 className="text-2xl font-black italic tracking-tight uppercase leading-tight">LEVEL UP REPUTATION.</h3>
+              <p className="text-xs text-blue-100leading-relaxed">
+                Complete designated daily physical exercises e.g., pushing ups, meditating, or studying code algorithms to obtain XP modules.
+              </p>
+            </div>
+            
+            <div className="mt-4 bg-blue-700/80 p-3 rounded-xl text-xs font-mono border border-blue-400/20">
+              <span className="text-blue-200">ACTIVE RAID PROGRESS:</span><br/>
+              100 pushups, 30m code study = +1 Level
+            </div>
+          </div>
+
+          {/* Global Hunter Ranking Widget Card (4 Cols) */}
+          <div className="col-span-12 md:col-span-4 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-center items-center text-center space-y-2 min-h-[220px]">
+            <div className="w-12 h-12 bg-zinc-950 rounded-xl flex items-center justify-center border border-zinc-800 text-blue-500 mb-2">
+              <Trophy className="w-5 h-5 fill-blue-500" />
+            </div>
+            <div className="text-3xl font-black tracking-tighter text-zinc-100 uppercase font-display">
+              RANK #1,402
+            </div>
+            <div className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
+              Global Hunter System Ranking
+            </div>
+            <p className="text-[11px] text-zinc-400 max-w-[240px]">
+              Climb local leagues based on verified offline weekly quests completions.
+            </p>
+          </div>
+
+          {/* Quick Feature Passive Grid Card (4 Cols) */}
+          <div className="col-span-12 md:col-span-4 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between min-h-[220px]">
+            <div>
+              <div className="text-xs text-zinc-500 uppercase font-bold tracking-widest mb-3">Sovereign Perks</div>
+              <div className="text-sm font-bold text-zinc-200 font-display mb-2">Passive Class Skills Unlocked</div>
+              
+              <div className="flex gap-2.5 mt-3">
+                <div className="w-10 h-10 bg-zinc-950 rounded-lg flex items-center justify-center border border-zinc-800 text-lg hover:border-zinc-700 transition-colors" title="Lightning Swiftness">⚡</div>
+                <div className="w-10 h-10 bg-zinc-950 rounded-lg flex items-center justify-center border border-zinc-800 text-lg hover:border-zinc-700 transition-colors" title="Iron Safeguard">🛡️</div>
+                <div className="w-10 h-10 bg-zinc-950 rounded-lg flex items-center justify-center border border-zinc-800 text-lg hover:border-zinc-700 transition-colors" title="Flame Sparkle">🔥</div>
+                <div className="w-10 h-10 bg-zinc-950 rounded-lg flex items-center justify-center border border-zinc-800 text-lg hover:border-zinc-700 transition-colors" title="Shadow Guard">🛡</div>
+              </div>
+            </div>
+
+            <div className="text-[11px] text-zinc-500 font-mono flex items-center gap-1.5 mt-4">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Dungeon Route: The Morning Commute (45m Clear)</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Live Interactive Simulator HUD (Fully Styled Bento Layout) */}
+        <section className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6 scroll-mt-20" id="interactive-simulator">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-800 pb-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] bg-blue-600/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded uppercase font-bold tracking-widest">
+                  Live Terminal Simulator
+                </span>
+                <span className="text-xs text-zinc-500 font-mono">v1.0.4-INTEGRATION</span>
+              </div>
+              <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-zinc-100 uppercase tracking-tight">
+                THE KAISEL QUEST INTERFACE
+              </h2>
+              <p className="text-sm text-zinc-400 max-w-xl">
+                Test the client-side leveling mechanism. Click <strong className="text-blue-500 font-semibold">+ Mock Log</strong> beneath active quests to increase progress, achieve level elevations, and obtain attributes.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={resetInteractiveDemo}
+                className="px-4 py-2 bg-zinc-950 hover:bg-zinc-850 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 rounded-xl text-xs font-mono transition-colors font-bold cursor-pointer"
+              >
+                Reset Interface
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-6">
+            
+            {/* Left Side: Avatar, Specs & Attribute Spend block (5 columns) */}
+            <div className="col-span-12 lg:col-span-5 bg-zinc-950 rounded-2xl border border-zinc-850 p-6 space-y-6">
+              
+              {/* Persona Avatar card */}
+              <div className="flex items-center gap-4 bg-zinc-900 p-4 rounded-xl border border-zinc-850">
+                <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center border border-blue-400 font-black text-xl italic text-white shadow-lg shadow-blue-500/20">
+                  {level}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    {isEditingName ? (
+                      <input 
+                        type="text" 
+                        value={hunterName} 
+                        onChange={(e) => setHunterName(e.target.value)}
+                        onBlur={() => setIsEditingName(false)}
+                        onKeyDown={(e) => e.key === "Enter" && setIsEditingName(false)}
+                        className="bg-zinc-950 border border-blue-500 text-white rounded px-2 py-1 text-sm font-display font-medium w-full focus:outline-none focus:ring-1 focus:ring-blue-400"
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span 
+                          onClick={() => setIsEditingName(true)}
+                          className="font-display font-bold text-base text-zinc-100 hover:text-blue-400 cursor-pointer transition-colors border-b border-dashed border-zinc-700"
+                        >
+                          {hunterName || "Sovereign"}
+                        </span>
+                        <button onClick={() => setIsEditingName(true)} className="text-[10px] text-zinc-500 hover:text-blue-400 uppercase font-bold tracking-wider">Edit</button>
+                      </div>
+                    )}
+                    
+                    <span className="text-[10px] px-2 py-0.5 bg-blue-950 text-blue-400/90 rounded border border-blue-900/40 uppercase tracking-widest font-mono ml-auto">
+                      {getRank(level)}
+                    </span>
+                  </div>
+
+                  {/* Class designation Dropdown */}
+                  <div className="mt-1 flex items-center gap-1">
+                    <span className="text-[10px] text-zinc-500 font-mono uppercase">CLASS PROTOCOL:</span>
+                    <select 
+                      value={selectedClass} 
+                      onChange={(e) => setSelectedClass(e.target.value)}
+                      className="bg-transparent text-blue-400 hover:text-blue-300 text-xs font-mono font-bold border-0 p-0 cursor-pointer focus:ring-0 focus:outline-none"
+                    >
+                      <option value="Shadow Monarch" className="bg-zinc-900 text-zinc-100">Shadow Monarch</option>
+                      <option value="Sovereign Fighter" className="bg-zinc-900 text-zinc-100">Sovereign Fighter</option>
+                      <option value="High Wizard" className="bg-zinc-900 text-zinc-100">High Wizard</option>
+                      <option value="Rogue Spear" className="bg-zinc-900 text-zinc-100">Rogue Spear</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats telemetry panel */}
+              <div className="space-y-3.5">
+                <div className="flex justify-between items-center text-xs font-mono">
+                  <span className="text-zinc-500">LEVEL METERS (XP)</span>
+                  <span className="text-blue-400 font-bold">{xp} / {maxXp} XP</span>
+                </div>
+                
+                <div className="h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-850">
+                  <motion.div 
+                    className="h-full bg-blue-600"
+                    animate={{ width: `${(xp / maxXp) * 100}%` }}
+                    transition={{ type: "spring", stiffness: 85 }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-zinc-900">
+                  <div>
+                    <span className="block text-[9px] text-zinc-500 font-mono uppercase">System Gold</span>
+                    <span className="text-lg font-mono font-bold text-yellow-500">{gold}g</span>
+                  </div>
+                  <div>
+                    <span className="block text-[9px] text-zinc-500 font-mono uppercase font-bold">Physical Fatigue</span>
+                    <span className={`text-lg font-mono font-bold ${fatigue > 70 ? "text-red-500" : "text-sky-450"}`}>{fatigue}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attributes block */}
+              <div className="space-y-3 pt-3 border-t border-zinc-900">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-xs text-zinc-400">CHARACTER ATTRIBUTES</span>
+                  {statPoints > 0 && (
+                    <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase animate-pulse">
+                      {statPoints} Attributes Points Left!
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {stats.map((st) => (
+                    <div 
+                      key={st.abbreviation}
+                      className="flex items-center justify-between text-xs bg-zinc-900 p-2.5 rounded-xl border border-zinc-850 hover:border-zinc-800 transition-colors"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-bold text-zinc-500 w-10 text-left">{st.abbreviation}</span>
+                          <span className="text-zinc-200 font-bold font-display">{st.name}</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-500">{st.description}</p>
                       </div>
                       
-                      <div className="flex-1">
-                        {isEditingName ? (
-                          <div className="flex items-center gap-1.5">
-                            <input 
-                              type="text" 
-                              value={hunterName} 
-                              onChange={(e) => setHunterName(e.target.value)}
-                              onBlur={() => setIsEditingName(false)}
-                              onKeyDown={(e) => e.key === "Enter" && setIsEditingName(false)}
-                              className="bg-slate-900 border border-sky-500 text-white rounded px-2 py-1 text-sm font-display font-medium w-full focus:outline-none focus:ring-1 focus:ring-sky-400"
-                              autoFocus
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <h3 
-                              onClick={() => setIsEditingName(true)}
-                              className="font-display font-bold text-lg text-white hover:text-sky-400 cursor-pointer transition-colors border-b border-dashed border-slate-700 hover:border-sky-400"
-                              title="Click to change name"
-                            >
-                              {hunterName || "Name"}
-                            </h3>
-                            <button onClick={() => setIsEditingName(true)} className="text-xs text-slate-500 hover:text-sky-400">📝 Edit</button>
-                          </div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-mono text-xs text-blue-400 font-bold bg-zinc-950 px-2 py-1 rounded-lg border border-zinc-850 min-w-8 text-center">{st.value}</span>
+                        {statPoints > 0 && (
+                          <button 
+                            onClick={() => allocateStatPoint(st.abbreviation)}
+                            className="w-6 h-6 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center font-black text-xs transition-colors cursor-pointer"
+                            title={`Allocate point to ${st.name}`}
+                          >
+                            +
+                          </button>
                         )}
-                        
-                        <select 
-                          value={selectedClass} 
-                          onChange={(e) => setSelectedClass(e.target.value)}
-                          className="bg-transparent text-slate-400 text-xs font-mono border-0 p-0 hover:text-sky-400 cursor-pointer focus:ring-0 focus:outline-none"
-                        >
-                          <option value="Shadow Monarch" className="bg-slate-950 text-slate-200">Shadow Monarch</option>
-                          <option value="Sovereign Fighter" className="bg-slate-950 text-slate-200">Sovereign Fighter</option>
-                          <option value="High Wizard" className="bg-slate-950 text-slate-200">High Wizard</option>
-                          <option value="Rogue Spear" className="bg-slate-950 text-slate-200">Rogue Spear</option>
-                        </select>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Side: Quest boards (7 columns) */}
+            <div className="col-span-12 lg:col-span-7 bg-zinc-950 rounded-2xl border border-zinc-850 p-6 flex flex-col justify-between">
+              
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+                  <span className="font-mono text-xs text-zinc-400 uppercase tracking-wider">Daily Target Quest Logs</span>
+                  <span className="text-[10px] text-zinc-500 font-mono">D-QUEST_CODE_939</span>
+                </div>
+
+                {/* Pre-requisite alert banner */}
+                <div className="p-4 bg-zinc-900 rounded-xl border border-blue-900/20 relative overflow-hidden">
+                  <div className="absolute right-0 top-0 text-blue-500/10 pointer-events-none transform translate-x-3 -translate-y-3 text-7xl font-mono font-black select-none">!</div>
+                  <div className="relative z-10 space-y-1.5">
+                    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-950 border border-red-900/35 rounded text-[8px] font-mono font-bold text-red-400 uppercase">
+                      Class Obligation
+                    </div>
+                    <h4 className="font-display font-semibold text-sm text-zinc-100 uppercase">Pre-requisite for Sovereign Title</h4>
+                    <p className="text-xs text-zinc-405 leading-relaxed">
+                      "System warning protocols state that missing regular weekly exercises locks down attributes accumulation points."
+                    </p>
                   </div>
+                </div>
 
-                  {/* Life Telemetry Stats */}
-                  <div className="bg-slate-900/50 border border-slate-900 p-4 rounded-xl space-y-3">
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-slate-400">XP PROGRESS</span>
-                      <span className="text-sky-400 font-bold">{xp} / {maxXp} XP</span>
-                    </div>
-                    {/* XP Outer Bar */}
-                    <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-sky-500 to-indigo-500"
-                        animate={{ width: `${(xp / maxXp) * 100}%` }}
-                        transition={{ type: "spring", stiffness: 80 }}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-950">
-                      <div>
-                        <span className="block text-[10px] text-slate-500 font-mono uppercase">System Level</span>
-                        <span className="text-2xl font-display font-bold text-white tracking-widest">Lv. {level}</span>
-                      </div>
-                      <div>
-                        <span className="block text-[10px] text-slate-500 font-mono uppercase">System Gold</span>
-                        <span className="text-2xl font-display font-bold text-yellow-500 tracking-widest">{gold}g</span>
-                      </div>
-                    </div>
+                <div className="space-y-3.5">
+                  {quests.map((q) => {
+                    const progressPercent = Math.min(100, Math.round((q.current / q.target) * 100));
+                    const isDone = q.current >= q.target;
                     
-                    <div className="pt-2 border-t border-slate-950">
-                      <div className="flex justify-between text-[10px] text-slate-550 font-mono uppercase mb-1">
-                        <span>Physical Fatigue</span>
-                        <span className={fatigue > 70 ? "text-red-400 font-bold" : "text-sky-400"}>{fatigue}%</span>
-                      </div>
-                      <div className="w-full h-1 bg-slate-950 rounded bg-opacity-40 overflow-hidden">
-                        <div className={`h-full ${fatigue > 70 ? "bg-red-500" : "bg-sky-400"}`} style={{ width: `${fatigue}%` }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Character Spendable Attributes */}
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-mono text-xs text-slate-500">CHARACTER ATTRIBUTES</span>
-                      {statPoints > 0 && (
-                        <span className="font-mono text-xs text-amber-400 font-semibold uppercase animate-pulse">
-                          +{statPoints} Spend Points!
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      {stats.map((st) => (
-                        <div 
-                          key={st.abbreviation}
-                          className="flex items-center justify-between text-xs bg-slate-900 p-2.5 rounded border border-slate-900 hover:border-slate-850"
-                        >
-                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-mono font-bold text-slate-400 w-12 text-left">{st.abbreviation}</span>
-                              <span className="text-slate-100 font-semibold">{st.name}</span>
+                    return (
+                      <div 
+                        key={q.id}
+                        className={`p-4 rounded-xl border transition-all ${
+                          isDone 
+                            ? "bg-zinc-900/40 border-zinc-900/60" 
+                            : "bg-zinc-900 border-zinc-850"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              {isDone ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                              ) : (
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                              )}
+                              <h5 className={`font-display font-bold text-sm ${isDone ? "text-zinc-500 line-through" : "text-zinc-250"}`}>
+                                {q.name}
+                              </h5>
                             </div>
-                            <p className="text-[10px] text-slate-500">{st.description}</p>
+                            <span className="block text-[10px] text-zinc-500 font-mono uppercase tracking-wider">
+                              REWARD: {q.rewardStr}
+                            </span>
                           </div>
                           
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-sm text-sky-400 font-bold bg-slate-950 px-2 py-1 rounded border border-slate-850 min-w-8 text-center">{st.value}</span>
-                            {statPoints > 0 && (
-                              <button 
-                                onClick={() => allocateStatPoint(st.abbreviation)}
-                                className="w-6 h-6 rounded bg-sky-500/20 hover:bg-sky-500 text-sky-400 hover:text-slate-950 flex items-center justify-center font-bold text-xs transition-colors cursor-pointer"
-                                title="Allocate stat point"
-                              >
-                                +
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Right Panel: Daily Quest Board (7 Columns) */}
-                <div className="md:col-span-7 p-6 space-y-6 flex flex-col justify-between bg-slate-950/60">
-                  
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs text-slate-500 uppercase tracking-wider">ACTIVE DAILY QUEST SUMMARY</span>
-                      <span className="text-[10px] text-slate-500 font-mono">ID: D-001438</span>
-                    </div>
-
-                    <div className="p-4 bg-slate-900 rounded-xl border border-sky-900/20 relative overflow-hidden">
-                      {/* Grid design background */}
-                      <div className="absolute inset-0 bg-slate-950/30 pointer-events-none opacity-40" />
-                      
-                      <div className="relative z-10 space-y-2">
-                        <span className="font-mono text-[9px] px-1.5 py-0.5 bg-red-950 text-red-400 rounded border border-red-900/50 font-bold uppercase tracking-widest">CRITICAL MISSION</span>
-                        <h4 className="font-display font-bold text-lg text-white">Pre-requisite for Awakening</h4>
-                        <p className="text-xs text-slate-400 leading-relaxed">
-                          "System warnings state that if the daily physical training log is ignored, a designated high-danger Penalty Quest zone will be launched."
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {quests.map((q) => {
-                        const progressPercent = Math.min(100, Math.round((q.current / q.target) * 100));
-                        const isDone = q.current >= q.target;
-                        
-                        return (
-                          <div 
-                            key={q.id}
-                            className={`p-4 rounded-xl border transition-all ${
+                          <button 
+                            onClick={() => triggerProgress(q.id)}
+                            disabled={isDone}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all uppercase ${
                               isDone 
-                                ? "bg-slate-900/30 border-slate-900/80" 
-                                : "bg-slate-900/60 border-slate-800"
+                                ? "bg-zinc-950 text-zinc-700 cursor-not-allowed border border-zinc-900" 
+                                : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/10 cursor-pointer"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-4 mb-2">
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  {isDone ? (
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                  ) : (
-                                    <div className="w-1.5 h-1.5 bg-sky-400 rounded-full" />
-                                  )}
-                                  <h5 className={`font-display font-semibold text-sm ${isDone ? "text-slate-500 line-through" : "text-white"}`}>
-                                    {q.name}
-                                  </h5>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-[10px] text-slate-500 font-mono">REWARD: {q.rewardStr}</span>
-                                </div>
-                              </div>
-                              
-                              <button 
-                                onClick={() => triggerProgress(q.id)}
-                                disabled={isDone}
-                                className={`px-3 py-1.5 rounded text-xs font-display font-medium transition-all inline-flex items-center gap-1 cursor-pointer ${
-                                  isDone 
-                                    ? "bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800" 
-                                    : "bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-slate-950 border border-sky-500/20 font-semibold"
-                                }`}
-                              >
-                                <span>{isDone ? "Finished" : "+ Mock Log"}</span>
-                              </button>
-                            </div>
+                            <span>{isDone ? "Cleared" : "+ Mock Log"}</span>
+                          </button>
+                        </div>
 
-                            <div className="space-y-1.5">
-                              <div className="flex justify-between text-[11px] font-mono">
-                                <span className="text-slate-500">Progress Telemetry</span>
-                                <span className={isDone ? "text-emerald-450 font-bold" : "text-slate-350"}>
-                                  {q.current} / {q.target} {q.unit} ({progressPercent}%)
-                                </span>
-                              </div>
-                              <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-900">
-                                <motion.div 
-                                  className={`h-full ${isDone ? "bg-emerald-500" : "bg-sky-500"}`}
-                                  animate={{ width: `${progressPercent}%` }}
-                                  transition={{ type: "spring", stiffness: 90 }}
-                                />
-                              </div>
-                            </div>
+                        <div className="space-y-1.5 font-mono">
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-zinc-500">Completed Metric</span>
+                            <span className={isDone ? "text-emerald-500 font-bold" : "text-zinc-300"}>
+                              {q.current} / {q.target} {q.unit} ({progressPercent}%)
+                            </span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-slate-900 bg-slate-950/20 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <p className="text-xs text-white font-medium flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Penalty Quest Imminent?</span>
-                      </p>
-                      <p className="text-[11px] text-slate-400">
-                        In the official Android app, failing to trigger daily quests triggers a hard fitness mode.
-                      </p>
-                    </div>
-                    <a 
-                      href="#downloads" 
-                      className="text-xs bg-slate-900 hover:bg-slate-850 hover:text-sky-400 text-slate-300 border border-slate-800 px-3 py-2 rounded text-center transition-colors"
-                    >
-                      How Penalty works
-                    </a>
-                  </div>
-
+                          <div className="w-full h-1.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-850">
+                            <motion.div 
+                              className={`h-full ${isDone ? "bg-emerald-500" : "bg-blue-500"}`}
+                              animate={{ width: `${progressPercent}%` }}
+                              transition={{ type: "spring", stiffness: 95 }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
 
+              <div className="border-t border-zinc-900 pt-4 mt-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-zinc-900/30 p-3 rounded-lg border border-zinc-850">
+                <div className="space-y-1">
+                  <p className="text-xs text-zinc-300 font-bold uppercase flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
+                    <span>Penalty Quest Risk Zones</span>
+                  </p>
+                  <p className="text-[10px] text-zinc-550 leading-relaxed max-w-sm">
+                    In the official Android package, ignoring objectives for 3 consecutive days triggers a hard physical recovery trial.
+                  </p>
+                </div>
+                
+                <a 
+                  href="#downloads"
+                  className="text-[10px] uppercase font-bold tracking-widest text-zinc-100 bg-zinc-950 border border-zinc-800 px-3 py-2 rounded-lg hover:border-zinc-700 transition-colors"
+                >
+                  Learn penalty
+                </a>
               </div>
 
             </div>
+
           </div>
         </section>
 
         {/* Feature Highlights Section */}
-        <section className="py-20 border-t border-slate-900 bg-slate-950" id="app-features">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto space-y-4 mb-20">
-              <span className="font-mono text-xs text-sky-400 font-bold tracking-widest uppercase">Engine Architecture</span>
-              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white">Engineered For Aspiring Sovereigns</h2>
-              <p className="text-slate-400">
-                Unlike bloated health trackers, Kaisel builds on minimalist design and manga metaphors to offer the most badass progress dashboard.
-              </p>
+        <section className="space-y-6" id="app-features">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="font-mono text-xs text-blue-500 font-black tracking-widest uppercase">APP CAPABILITIES</span>
+            <h2 className="font-display font-extrabold text-3xl text-zinc-100 uppercase">ENGINEERED SPECS</h2>
+            <p className="text-sm text-zinc-400">
+              Kaisel utilizes isolated mobile technologies to provide a lightning fast, private personal ledger without intrusive network queries.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Bento box 1 */}
+            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between group hover:border-zinc-750 transition-all min-h-[220px]">
+              <div className="w-10 h-10 rounded-xl bg-zinc-950 text-blue-500 flex items-center justify-center border border-zinc-850">
+                <Lock className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="space-y-2 mt-4">
+                <h3 className="font-display font-black text-lg text-zinc-100 uppercase tracking-tight">100% Offline Storage</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Your life targets belong strictly to your device file structure. Kaisel saves metrics into local encrypted binary partitions. Zero analytics trackers or database sync hazards.
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              
-              {/* Feature 1 */}
-              <div className="space-y-4 p-6 bg-slate-900/20 border border-slate-900 rounded-2xl">
-                <div className="w-10 h-10 rounded-lg bg-sky-950 text-sky-400 flex items-center justify-center border border-sky-900/50">
-                  <Lock className="w-5 h-5" />
-                </div>
-                <h3 className="font-display font-bold text-lg text-white">100% Privacy Focused</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Your life logs belong to you alone. Kaisel keeps all workout counts and study durations encrypted inside a fast, local SQLite database on your Android storage. No servers, no tracking.
+            {/* Bento box 2 */}
+            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between group hover:border-zinc-750 transition-all min-h-[220px]">
+              <div className="w-10 h-10 rounded-xl bg-zinc-950 text-blue-500 flex items-center justify-center border border-zinc-850">
+                <Activity className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="space-y-2 mt-4">
+                <h3 className="font-display font-black text-lg text-zinc-100 uppercase tracking-tight">Passive Telemetry Support</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Automatically synchronize with Android Health APIs layout to register step metrics and calorie burns directly without launching persistent background applications.
                 </p>
               </div>
-
-              {/* Feature 2 */}
-              <div className="space-y-4 p-6 bg-slate-900/20 border border-slate-900 rounded-2xl">
-                <div className="w-10 h-10 rounded-lg bg-sky-950 text-sky-400 flex items-center justify-center border border-sky-900/50">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <h3 className="font-display font-bold text-lg text-white">Daily Workout Detection</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Connect local health modules. The system scans step count telemetry offline and awards instant speed statistics, matching the exact stamina tracking of legendary series heroes.
-                </p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="space-y-4 p-6 bg-slate-900/20 border border-slate-900 rounded-2xl">
-                <div className="w-10 h-10 rounded-lg bg-sky-950 text-sky-400 flex items-center justify-center border border-sky-900/50">
-                  <Swords className="w-5 h-5" />
-                </div>
-                <h3 className="font-display font-bold text-lg text-white">Awakener Rank Tier Up</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Climb ranks step-by-step. Earn customized titles, unlock cosmetic interface colors, and share elegant layout cards of your high level achievements offline to social networks.
-                </p>
-              </div>
-
             </div>
+
+            {/* Bento box 3 */}
+            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between group hover:border-zinc-750 transition-all min-h-[220px]">
+              <div className="w-10 h-10 rounded-xl bg-zinc-950 text-blue-500 flex items-center justify-center border border-zinc-850">
+                <Swords className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="space-y-2 mt-4">
+                <h3 className="font-display font-black text-lg text-zinc-100 uppercase tracking-tight">E-Rank to S-Rank Classes</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Gain titles offline. Create customizable graphic log cards representing high tier attribute clearances to display proudly on social grids.
+                </p>
+              </div>
+            </div>
+
           </div>
         </section>
 
-        {/* Download Call to Action Section */}
-        <section className="py-20 border-t border-slate-900 bg-gradient-to-b from-slate-950 to-slate-900 scroll-mt-20" id="downloads">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 md:p-12 relative overflow-hidden text-center space-y-8">
-              {/* Futuristic background lines */}
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-sky-400 to-transparent opacity-30" />
-              <div className="absolute inset-0 bg-sky-500/5 pointer-events-none blur-3xl" />
+        {/* Download Standalone Package Section */}
+        <section className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center space-y-6 relative overflow-hidden scroll-mt-20" id="downloads">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-30" />
+          <div className="absolute inset-0 bg-blue-600/[0.02] pointer-events-none blur-3xl" />
 
-              <div className="relative z-10 max-w-3xl mx-auto space-y-4">
-                <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white">
-                  Ready to Awaken? Install the Android System today.
-                </h2>
-                <p className="text-sm sm:text-base text-slate-400">
-                  Ditch basic spreadsheets and experience a true visual tracking hierarchy. Click below to retrieve the standalone APK configuration file for direct deployment.
-                </p>
-              </div>
-
-              {/* Download Buttons */}
-              <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
-                <a 
-                  href="#direct-apk" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setNotification("📥 Kaisel APK Download initiated! (Simulated download file: kaisel-alpha-v1.deb.apk)");
-                  }}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-sky-500 hover:bg-sky-400 text-slate-950 px-8 py-4 rounded-xl font-display font-semibold transition-all shadow-lg shadow-sky-500/10 cursor-pointer"
-                >
-                  <Download className="w-5 h-5" />
-                  <span>Download APK (arm64)</span>
-                </a>
-                
-                <a 
-                  href="#sources"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setNotification("📋 App package sources directory unlocked under open source terms.");
-                  }}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-slate-950 hover:bg-slate-900 text-slate-300 border border-slate-800 px-8 py-4 rounded-xl font-display font-medium transition-all"
-                >
-                  <FileText className="w-5 h-5" />
-                  <span>GitHub Repository</span>
-                </a>
-              </div>
-
-              {/* Requirements specifications */}
-              <div className="relative z-10 text-xs text-slate-500 font-mono flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-                <span>Supports: Android 8.0+ (Oreo to Android 15)</span>
-                <span className="hidden sm:inline">•</span>
-                <span>File Size: ~18.4 MB</span>
-                <span className="hidden sm:inline">•</span>
-                <span>No Root Required</span>
-              </div>
-            </div>
+          <div className="max-w-2xl mx-auto space-y-3">
+            <span className="font-mono text-xs text-blue-500 font-bold uppercase tracking-widest">[Sovereign System Package]</span>
+            <h2 className="font-display font-black text-35xl sm:text-4xl text-zinc-100 uppercase">
+              Download the Kaisel Application
+            </h2>
+            <p className="text-zinc-400 text-sm max-w-lg mx-auto">
+              Ready to awaken? Skip complex app stores and fetch the standalone package directly to your Android file manager to setup instantly.
+            </p>
           </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-sm mx-auto pt-2">
+            <button 
+              onClick={() => setNotification("📥 APK file download initiated successfully: kaisel-sovereign-v1.apk")}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg shadow-blue-500/10 text-xs uppercase tracking-wider cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download APK</span>
+            </button>
+            <button 
+              onClick={() => setNotification("📋 Git repository sources opened in active terminal configuration context.")}
+              className="w-full sm:w-auto bg-zinc-950 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 hover:border-zinc-700 font-bold px-6 py-3 rounded-xl transition-all text-xs uppercase tracking-wider"
+            >
+              System Git Repo
+            </button>
+          </div>
+
+          <p className="text-[10px] text-zinc-650 font-mono">
+            Requires: Android 8.0+ (Oreo, Pie, Q, 11, 12, 13, 14, 15) • File Size: ~18.4 MB • Zero root requisites
+          </p>
         </section>
 
       </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-950 border-t border-slate-900 py-12 text-slate-500" id="main-footer">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Footer conforming to guidelines */}
+      <footer className="border-t border-zinc-900 bg-zinc-950 py-12 text-zinc-600" id="main-footer">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-sky-950 text-sky-400 flex items-center justify-center border border-sky-900/50">
-                <Flame className="w-3.5 h-3.5 text-sky-400" />
-              </div>
-              <span className="font-display font-bold text-base text-slate-300 tracking-widest uppercase">KAISEL APPS</span>
+              <div className="w-6 h-6 rounded bg-zinc-900 text-blue-500 flex items-center justify-center font-black italic text-xs border border-zinc-800">K</div>
+              <span className="font-display font-medium text-xs text-zinc-400 uppercase tracking-widest">Kaisel System Integration</span>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-6 text-xs text-slate-400">
-              <a href="#how-it-works" className="hover:text-white transition-colors">System Mechanics</a>
-              <a href="#interactive-simulator" className="hover:text-white transition-colors">Quest Terminal</a>
-              <a href="#app-features" className="hover:text-white transition-colors">Awakened Perks</a>
+            <div className="flex flex-wrap justify-center gap-6 text-[10px] uppercase tracking-[0.2em] font-bold">
+              <a href="#how-it-works" className="hover:text-blue-500 transition-colors">Abilities</a>
+              <a href="#interactive-simulator" className="hover:text-blue-500 transition-colors">Inventory</a>
               <button 
-                onClick={() => setIsPrivacyOpen(true)}
-                className="hover:text-white transition-colors font-semibold text-sky-400 underline decoration-sky-400/50 underline-offset-4 cursor-pointer"
-                id="footer-privacy-policy"
+                onClick={() => navigateTo("privacy")}
+                className="hover:text-blue-550 text-blue-500 transition-colors cursor-pointer bg-transparent border-0 p-0 font-bold uppercase tracking-[0.2em] text-[10px]"
+                id="footer-privacy-policy-link"
               >
-                Privacy Policy Guidelines
+                Privacy Policy
               </button>
+              <a href="#" onClick={(e) => { e.preventDefault(); setNotification("Terms of Service is identical to standard open source GNU rules."); }} className="hover:text-blue-500 transition-colors">Terms of Service</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); setNotification("Sovereign assistance system support contact email mapped to owner."); }} className="hover:text-blue-500 transition-colors">Support</a>
             </div>
 
-            <p className="text-xs text-slate-600 font-mono">
-              © {new Date().getFullYear()} Kaisel App. All Sovereign rights reserved.
+            <p className="text-[10px] text-zinc-600 font-mono tracking-normal">
+              © {new Date().getFullYear()} Kaisel Sovereign System. All rights reserved.
             </p>
 
           </div>
@@ -901,94 +960,72 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 px-4 backdrop-blur-sm"
             onClick={() => setIsPrivacyOpen(false)}
             id="privacy-policy-modal"
           >
             <motion.div
-              initial={{ scale: 0.95, y: 20 }}
+              initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 md:p-8 space-y-6 shadow-2xl relative"
+              exit={{ scale: 0.95, y: 15 }}
+              className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 md:p-8 space-y-6 shadow-2xl relative text-left"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}
               <button 
                 onClick={() => setIsPrivacyOpen(false)}
-                className="absolute top-6 right-6 p-1 bg-slate-950 hover:bg-slate-805 text-slate-400 hover:text-white rounded-lg transition-colors border border-slate-800"
+                className="absolute top-6 right-6 p-1.5 bg-zinc-950 hover:bg-zinc-805 text-zinc-400 hover:text-white rounded-lg transition-colors border border-zinc-800 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
 
-              <div className="space-y-2 border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-2 text-sky-400">
-                  <Shield className="w-5 h-5" />
-                  <span className="font-mono text-xs font-bold uppercase tracking-widest">Sovereign Protection Registry</span>
+              <div className="space-y-1 pb-4 border-b border-zinc-850">
+                <div className="text-blue-500 font-mono text-[10px] tracking-widest uppercase font-bold flex items-center gap-1">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Sovereign Security Protocols</span>
                 </div>
-                <h3 className="font-display font-bold text-2xl text-white">Kaisel Privacy Policy</h3>
-                <p className="text-xs text-slate-500 font-mono">Last modified: June 23, 2026 • Verified System Secure</p>
+                <h3 className="font-display font-black text-2xl text-zinc-100 uppercase tracking-tight">Kaisel Privacy Policy guidelines</h3>
+                <p className="text-[11px] text-zinc-500 font-mono">Verified offline secure model. Updated: June 23, 2026</p>
               </div>
 
-              <div className="space-y-5 text-sm text-slate-300 leading-relaxed scrollbar-thin">
+              <div className="space-y-4 text-xs font-mono text-zinc-350 leading-relaxed">
                 
-                <section className="space-y-2">
-                  <h4 className="font-display font-semibold text-white flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-sky-400" />
-                    <span>1. Telemetry Privacy & No-Data-Harvesting</span>
-                  </h4>
-                  <p>
-                    Kaisel is designed with extreme offline principles. We believe that your self-improvement telemetry, daily workouts, study habits, and psychological markers belong strictly to you. **All database operations occur locally on your custom Android runtime system (SQLite database file)**. We never compile, aggregate, sell, or mirror your personal statistics to external cloud entities.
+                <div className="space-y-1.5">
+                  <span className="block font-bold text-zinc-150 uppercase tracking-wider text-xs">1. Offline local sandboxing only</span>
+                  <p className="text-zinc-400">
+                    Kaisel maintains all exercise reps, level up indexes, gold counters, code durations and active schedules locally inside an offline SQLite sandbox. We do not write, transmit, share, or backup metrics to central web servers.
                   </p>
-                </section>
+                </div>
 
-                <section className="space-y-2">
-                  <h4 className="font-display font-semibold text-white flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-sky-400" />
-                    <span>2. Sensory Integrations & Android Health Connect</span>
-                  </h4>
-                  <p>
-                    To correctly automate Quest progress (specifically physical exercise metrics), Kaisel integrates optional telemetry connections with local Google Health Connect libraries. These queries are compiled inside your handheld device. No location logs or spatial GPS patterns leave your operating system environment.
+                <div className="space-y-1.5">
+                  <span className="block font-bold text-zinc-150 uppercase tracking-wider text-xs">2. Health API integration</span>
+                  <p className="text-zinc-400">
+                    Kaisel connects with native Google Health parameters locally to automatically retrieve real workout counts. No sensitive background location trackers or telemetry indicators are ever engaged.
                   </p>
-                </section>
+                </div>
 
-                <section className="space-y-2">
-                  <h4 className="font-display font-semibold text-white flex items-center gap-2">
-                    <Smartphone className="w-4 h-4 text-sky-400" />
-                    <span>3. Offline Local Sandbox Parameters</span>
-                  </h4>
-                  <p>
-                    Your user profile, level index, coin cache, and current rank statuses are secured within standard isolated sandbox storage directories. Clearing application caches or carrying out factory system resets will delete your level metadata, as we do not hold server side mirror copies. Offline exports are provided manually as serialized JSON files in your downloads directories.
+                <div className="space-y-1.5">
+                  <span className="block font-bold text-zinc-150 uppercase tracking-wider text-xs">3. Zero third-party ad networks</span>
+                  <p className="text-zinc-400">
+                    Your progression is yours. Kaisel is entirely free from tracking SDKs, advertising pixels or corporate trackers e.g. Facebook pixel, hotjar or Google Analytics.
                   </p>
-                </section>
+                </div>
 
-                <section className="space-y-2">
-                  <h4 className="font-display font-semibold text-white flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-sky-400" />
-                    <span>4. Third-Party Tracker Elimination</span>
-                  </h4>
-                  <p>
-                    Kaisel contains **zero tracking SDKs, advertising pixel scripts, or telemetry libraries** (such as Firebase Analytics, HubSpot, or segment trackers). We guarantee a 100% clean, distraction-free environment optimized specifically for performance.
+                <div className="space-y-1.5">
+                  <span className="block font-bold text-zinc-150 uppercase tracking-wider text-xs">4. Contact system protocol</span>
+                  <p className="text-zinc-400">
+                    For system feedback regarding leveling ratios, feel free to email the system coordinator directly at: <a href="mailto:malinduchethiyaatwork@gmail.com" className="text-blue-500 underline">malinduchethiyaatwork@gmail.com</a>.
                   </p>
-                </section>
-
-                <section className="space-y-2">
-                  <h4 className="font-display font-semibold text-white flex items-center gap-2">
-                    <Award className="w-4 h-4 text-sky-400" />
-                    <span>5. Contact & System Protocol Inquiries</span>
-                  </h4>
-                  <p>
-                    For questions, system bug updates, feedback, or general greetings regarding the application architecture, you can contact the Kaisel development team directly at <a href="mailto:malinduchethiyaatwork@gmail.com" className="text-sky-450 underline decoration-sky-450 hover:text-white transition-colors">malinduchethiyaatwork@gmail.com</a>.
-                  </p>
-                </section>
+                </div>
 
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-slate-800">
+              <div className="flex justify-end pt-4 border-t border-zinc-850">
                 <button 
                   onClick={() => setIsPrivacyOpen(false)}
-                  className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-display font-medium px-6 py-2.5 rounded-lg transition-all text-xs tracking-wider uppercase cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-display font-bold py-2.5 px-6 rounded-xl text-xs uppercase tracking-wide cursor-pointer"
                 >
-                  I Acknowledge the System
+                  I Acknowledge protocols
                 </button>
               </div>
 
@@ -1000,4 +1037,3 @@ export default function App() {
     </div>
   );
 }
-
