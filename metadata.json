@@ -1,0 +1,6 @@
+{
+  "name": "Kaisel - Manga Leveling App",
+  "description": "Unlock your potential with Kaisel, the gamified Android app that turns your daily habits, workouts, and goals into a manga-style leveling adventure.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
