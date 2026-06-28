@@ -85,7 +85,11 @@ export default function App() {
   const [currentRoute, setCurrentRoute] = useState<"main" | "privacy">(() => {
     if (typeof window !== "undefined") {
       try {
-        return window.location.pathname === "/privacy" ? "privacy" : "main";
+        const path = window.location.pathname;
+        const hash = window.location.hash;
+        if (path === "/privacy" || path.endsWith("/privacy") || hash === "#/privacy" || hash.includes("privacy")) {
+          return "privacy";
+        }
       } catch (err) {
         console.warn("Unable to access pathname due to sandboxing:", err);
       }
@@ -96,19 +100,27 @@ export default function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       try {
-        setCurrentRoute(window.location.pathname === "/privacy" ? "privacy" : "main");
+        const path = window.location.pathname;
+        const hash = window.location.hash;
+        if (path === "/privacy" || path.endsWith("/privacy") || hash === "#/privacy" || hash.includes("privacy")) {
+          setCurrentRoute("privacy");
+        } else {
+          setCurrentRoute("main");
+        }
       } catch (err) {
         console.warn("Unable to access pathname during popstate event:", err);
       }
     };
     try {
       window.addEventListener("popstate", handleLocationChange);
+      window.addEventListener("hashchange", handleLocationChange);
     } catch (err) {
-      console.warn("Unable to add popstate listener:", err);
+      console.warn("Unable to add routing listeners:", err);
     }
     return () => {
       try {
         window.removeEventListener("popstate", handleLocationChange);
+        window.removeEventListener("hashchange", handleLocationChange);
       } catch (err) {
         // Safe ignore
       }
