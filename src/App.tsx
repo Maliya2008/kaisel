@@ -964,13 +964,15 @@ export default function App() {
             <div className="flex flex-wrap justify-center gap-6 text-[10px] uppercase tracking-[0.2em] font-bold">
               <a href="#how-it-works" className="hover:text-blue-500 transition-colors">Abilities</a>
               <a href="#interactive-simulator" className="hover:text-blue-500 transition-colors">Inventory</a>
-              <button 
-                onClick={() => navigateTo("privacy")}
-                className="hover:text-blue-550 text-blue-500 transition-colors cursor-pointer bg-transparent border-0 p-0 font-bold uppercase tracking-[0.2em] text-[10px]"
+              <a 
+                href="https://kaisel-wwnm.vercel.app/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-blue-500 text-blue-500 transition-colors cursor-pointer font-bold uppercase tracking-[0.2em] text-[10px] no-underline"
                 id="footer-privacy-policy-link"
               >
                 Privacy Policy
-              </button>
+              </a>
               <a href="#" onClick={(e) => { e.preventDefault(); setNotification("Terms of Service is identical to standard open source GNU rules."); }} className="hover:text-blue-500 transition-colors">Terms of Service</a>
               <a href="#" onClick={(e) => { e.preventDefault(); setNotification("Sovereign assistance system support contact email mapped to owner."); }} className="hover:text-blue-500 transition-colors">Support</a>
             </div>
