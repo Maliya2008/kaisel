@@ -84,24 +84,54 @@ export default function App() {
   // Simple custom SPA route tracking to support standard /privacy url structure
   const [currentRoute, setCurrentRoute] = useState<"main" | "privacy">(() => {
     if (typeof window !== "undefined") {
-      return window.location.pathname === "/privacy" ? "privacy" : "main";
+      try {
+        return window.location.pathname === "/privacy" ? "privacy" : "main";
+      } catch (err) {
+        console.warn("Unable to access pathname due to sandboxing:", err);
+      }
     }
     return "main";
   });
 
   useEffect(() => {
     const handleLocationChange = () => {
-      setCurrentRoute(window.location.pathname === "/privacy" ? "privacy" : "main");
+      try {
+        setCurrentRoute(window.location.pathname === "/privacy" ? "privacy" : "main");
+      } catch (err) {
+        console.warn("Unable to access pathname during popstate event:", err);
+      }
     };
-    window.addEventListener("popstate", handleLocationChange);
-    return () => window.removeEventListener("popstate", handleLocationChange);
+    try {
+      window.addEventListener("popstate", handleLocationChange);
+    } catch (err) {
+      console.warn("Unable to add popstate listener:", err);
+    }
+    return () => {
+      try {
+        window.removeEventListener("popstate", handleLocationChange);
+      } catch (err) {
+        // Safe ignore
+      }
+    };
   }, []);
 
   const navigateTo = (route: "main" | "privacy") => {
     const path = route === "privacy" ? "/privacy" : "/";
-    window.history.pushState({}, "", path);
+    try {
+      window.history.pushState({}, "", path);
+    } catch (err) {
+      console.warn("Unable to pushState due to sandboxing, routing locally only:", err);
+    }
     setCurrentRoute(route);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      try {
+        window.scrollTo(0, 0);
+      } catch (scrollErr) {
+        // Safe ignore
+      }
+    }
   };
 
   // Auto-dismiss notifications
